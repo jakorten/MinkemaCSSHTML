@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flexbox Alignment — HAVO 4</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d0d1a; }
+  button { cursor: pointer; border: none; outline: none; }
+  code { background: #1a1a2e; color: #7dd3fc; padding: 2px 6px; border-radius: 4px; font-size: 13px; font-family: 'JetBrains Mono', monospace; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+const COLORS = ["#E8453C", "#F4A623", "#2D8CFF", "#1DBF73", "#9B59B6"];
+
+function Box({ index, grow, style = {} }) {
+  const labels = ["A", "B", "C", "D", "E"];
+  const heights = [44, 64, 36, 52, 48];
+  return (
+    <div style={{
+      background: COLORS[index % COLORS.length],
+      color: "#fff", fontWeight: 800, fontSize: 18,
+      fontFamily: "'Nunito', sans-serif", borderRadius: 10,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      minWidth: grow ? 0 : 56, minHeight: heights[index % heights.length],
+      padding: "8px 16px", flexGrow: grow ? 1 : 0,
+      transition: "all 0.35s ease",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.2)", ...style,
+    }}>
+      {labels[index % labels.length]}
+    </div>
+  );
+}
+
+function Pill({ label, active, onClick, color = "#E8453C" }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: "6px 14px", borderRadius: 20,
+      border: active ? `2px solid ${color}` : "1px solid #444",
+      background: active ? `${color}22` : "transparent",
+      color: active ? color : "#888",
+      fontFamily: "'Nunito', sans-serif", fontSize: 13,
+      fontWeight: active ? 800 : 600, transition: "all 0.2s", whiteSpace: "nowrap",
+    }}>
+      {label}
+    </button>
+  );
+}
+
+function DemoContainer({ direction, justify, align, gap, items, grow }) {
+  const isRow = direction === "row";
+  return (
+    <div style={{ position: "relative", paddingTop: 28, paddingLeft: 28 }}>
+      <div style={{
+        position: "absolute", top: isRow ? 6 : 28, left: isRow ? 28 : 4,
+        display: "flex", alignItems: "center", gap: 4,
+        transform: isRow ? "none" : "rotate(90deg)", transformOrigin: "left top",
+      }}>
+        <div style={{ width: 80, height: 3, background: "linear-gradient(90deg, #E8453C, #E8453C88)", borderRadius: 2 }} />
+        <span style={{ fontSize: 10, fontFamily: "'Nunito', sans-serif", fontWeight: 800, color: "#E8453C", whiteSpace: "nowrap" }}>MAIN AXIS</span>
+        <span style={{ fontSize: 10, color: "#E8453C88" }}>→</span>
+      </div>
+      <div style={{
+        position: "absolute", top: isRow ? 28 : 6, left: isRow ? 4 : 28,
+        display: "flex", alignItems: "center", gap: 4,
+        transform: isRow ? "rotate(90deg)" : "none", transformOrigin: "left top",
+      }}>
+        <div style={{ width: 60, height: 3, background: "linear-gradient(90deg, #2D8CFF, #2D8CFF88)", borderRadius: 2 }} />
+        <span style={{ fontSize: 10, fontFamily: "'Nunito', sans-serif", fontWeight: 800, color: "#2D8CFF", whiteSpace: "nowrap" }}>CROSS AXIS</span>
+        <span style={{ fontSize: 10, color: "#2D8CFF88" }}>→</span>
+      </div>
+      <div style={{
+        display: "flex", flexDirection: direction, justifyContent: justify,
+        alignItems: align, gap: gap, width: "100%",
+        minHeight: direction === "column" ? 240 : 130,
+        maxHeight: direction === "column" ? 240 : "auto",
+        border: "2px dashed #555", borderRadius: 14, padding: 14,
+        transition: "all 0.35s ease", boxSizing: "border-box",
+        overflow: "hidden", background: "#0a0a18",
+      }}>
+        {Array.from({ length: items }).map((_, i) => (
+          <Box key={i} index={i} grow={grow} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CodePreview({ direction, justify, align, grow }) {
+  return (
+    <div style={{
+      background: "#0d0d1a", border: "1px solid #2a2a3a", borderRadius: 10,
+      padding: "12px 16px", fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 12, lineHeight: 1.9, color: "#7dd3fc", marginTop: 12,
+    }}>
+      <span style={{ color: "#666" }}>{"/* jouw CSS */"}</span><br />
+      <span style={{ color: "#c792ea" }}>display</span>: flex;<br />
+      <span style={{ color: "#c792ea" }}>flex-direction</span>: <span style={{ color: "#f78c6c" }}>{direction}</span>;<br />
+      <span style={{ color: "#c792ea" }}>justify-content</span>: <span style={{ color: "#f78c6c" }}>{justify}</span>;<br />
+      <span style={{ color: "#c792ea" }}>align-items</span>: <span style={{ color: "#f78c6c" }}>{align}</span>;<br />
+      {grow && <><span style={{ color: "#666" }}>{"/* op elk item: */"}</span><br />
+      <span style={{ color: "#c792ea" }}>flex-grow</span>: <span style={{ color: "#f78c6c" }}>1</span>;<br /></>}
+    </div>
+  );
+}
+
+function QuizQuestion({ question, options, correctIndex, explanation }) {
+  const [selected, setSelected] = useState(null);
+  const answered = selected !== null;
+  return (
+    <div style={{ background: "#151528", borderRadius: 14, padding: 20, marginBottom: 14 }}>
+      <p style={{ fontFamily: "'Nunito', sans-serif", fontSize: 15, fontWeight: 700, color: "#eee", marginBottom: 12, lineHeight: 1.5 }}>
+        {question}
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {options.map((opt, i) => {
+          let bg = "transparent"; let border = "1px solid #444"; let color = "#aaa";
+          if (answered && i === correctIndex) { bg = "#1DBF7322"; border = "2px solid #1DBF73"; color = "#1DBF73"; }
+          else if (answered && i === selected && i !== correctIndex) { bg = "#E8453C22"; border = "2px solid #E8453C"; color = "#E8453C"; }
+          return (
+            <button key={i} onClick={() => !answered && setSelected(i)} style={{
+              padding: "10px 16px", borderRadius: 10, border, background: bg, color,
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 13,
+              cursor: answered ? "default" : "pointer", textAlign: "left",
+              transition: "all 0.2s", fontWeight: (answered && i === correctIndex) ? 700 : 400,
+            }}>
+              {opt}
+            </button>
+          );
+        })}
+      </div>
+      {answered && (
+        <div style={{
+          marginTop: 12, padding: "10px 14px",
+          background: selected === correctIndex ? "#1DBF7311" : "#F4A62311",
+          borderRadius: 10, fontSize: 13, fontFamily: "'Nunito', sans-serif",
+          color: "#ccc", lineHeight: 1.6,
+          borderLeft: `3px solid ${selected === correctIndex ? "#1DBF73" : "#F4A623"}`,
+        }}>
+          {selected === correctIndex ? "✅ " : "❌ "}{explanation}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Callout({ color, emoji, children }) {
+  return (
+    <div style={{
+      background: `${color}11`, borderLeft: `4px solid ${color}`,
+      borderRadius: "0 12px 12px 0", padding: "12px 16px", marginBottom: 16,
+      fontSize: 14, lineHeight: 1.7, color: "#ddd", fontFamily: "'Nunito', sans-serif",
+    }}>
+      <span style={{ fontSize: 18, marginRight: 8 }}>{emoji}</span>{children}
+    </div>
+  );
+}
+
+function NavBtn({ onClick, children, primary }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: "10px 24px", borderRadius: 20,
+      border: primary ? "none" : "1px solid #444",
+      background: primary ? "#F4A623" : "transparent",
+      color: primary ? "#000" : "#888", fontWeight: primary ? 800 : 700,
+      fontFamily: "'Nunito', sans-serif", fontSize: 14,
+    }}>
+      {children}
+    </button>
+  );
+}
+
+function App() {
+  const [dir, setDir] = useState("row");
+  const [justify, setJustify] = useState("flex-start");
+  const [align, setAlign] = useState("stretch");
+  const [grow, setGrow] = useState(false);
+  const [step, setStep] = useState(0);
+
+  const steps = [
+    "Stap 1: De richting kiezen",
+    "Stap 2: Verdelen op de main axis",
+    "Stap 3: Uitlijnen op de cross axis",
+    "Stap 4: Probeer het zelf!",
+    "Stap 5: Test jezelf",
+  ];
+
+  const text = { fontFamily: "'Nunito', sans-serif", fontSize: 15, lineHeight: 1.7, color: "#bbb", marginBottom: 14 };
+  const heading = { fontFamily: "'Nunito', sans-serif", fontSize: 22, fontWeight: 800, color: "#eee", marginBottom: 12 };
+
+  return (
+    <div style={{ background: "#0d0d1a", color: "#eee", minHeight: "100vh", padding: "24px 20px 40px", maxWidth: 640, margin: "0 auto" }}>
+
+      <header style={{ textAlign: "center", marginBottom: 32 }}>
+        <h1 style={{
+          fontFamily: "'Nunito', sans-serif", fontSize: 30, fontWeight: 900,
+          background: "linear-gradient(135deg, #E8453C, #F4A623, #2D8CFF)",
+          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", marginBottom: 6,
+        }}>Flexbox Alignment</h1>
+        <p style={{ color: "#666", fontFamily: "'Nunito', sans-serif", fontSize: 14 }}>In 5 stappen begrijp je hoe het werkt</p>
+      </header>
+
+      {/* Step nav */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 28, overflowX: "auto", paddingBottom: 4 }}>
+        {steps.map((s, i) => (
+          <button key={i} onClick={() => setStep(i)} style={{
+            padding: "8px 14px", borderRadius: 20,
+            border: step === i ? "2px solid #F4A623" : "1px solid #333",
+            background: step === i ? "#F4A62322" : "#151528",
+            color: step === i ? "#F4A623" : "#777",
+            fontFamily: "'Nunito', sans-serif", fontSize: 13,
+            fontWeight: step === i ? 800 : 600, whiteSpace: "nowrap",
+            transition: "all 0.2s", flexShrink: 0,
+          }}>{i + 1}</button>
+        ))}
+        <span style={{
+          display: "flex", alignItems: "center", fontSize: 13, color: "#666",
+          fontFamily: "'Nunito', sans-serif", fontWeight: 600, paddingLeft: 4, whiteSpace: "nowrap",
+        }}>{steps[step]}</span>
+      </div>
+
+      {/* STEP 1 */}
+      {step === 0 && <div>
+        <h2 style={heading}>Waar gaan je items heen?</h2>
+        <p style={text}>
+          Zet <code>display: flex</code> op een container en je items gaan <strong>naast elkaar</strong> staan. Dat is de standaard: een rij.
+        </p>
+        <p style={text}>
+          Maar je kunt ook kiezen: <strong>onder elkaar</strong> (een kolom). Klik hieronder en kijk wat er gebeurt:
+        </p>
+        <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+          <Pill label="row (rij →)" active={dir === "row"} onClick={() => setDir("row")} />
+          <Pill label="column (kolom ↓)" active={dir === "column"} onClick={() => setDir("column")} color="#2D8CFF" />
+        </div>
+        <DemoContainer direction={dir} justify="flex-start" align="stretch" gap={10} items={3} grow={false} />
+
+        {/* Visual axis diagram */}
+        <div style={{
+          background: "#151528", borderRadius: 14, padding: 20, marginTop: 20, marginBottom: 16,
+        }}>
+          <p style={{ fontFamily: "'Nunito', sans-serif", fontSize: 14, color: "#999", marginBottom: 14 }}>
+            Kijk goed naar het diagram hieronder. De <strong style={{ color: "#E8453C" }}>rode pijl</strong> wijst altijd dezelfde kant op als waar je items naartoe gaan:
+          </p>
+
+          {/* Axis animation box */}
+          <div style={{
+            position: "relative", width: 220, height: 160, margin: "0 auto 16px",
+            border: "2px solid #333", borderRadius: 12, overflow: "hidden", background: "#0a0a18",
+          }}>
+            {/* Main axis arrow */}
+            <div style={{
+              position: "absolute",
+              transition: "all 0.5s ease",
+              ...(dir === "row" ? {
+                top: "50%", left: 20, right: 20,
+                transform: "translateY(-50%)",
+                height: 4,
+              } : {
+                left: "50%", top: 20, bottom: 20,
+                transform: "translateX(-50%)",
+                width: 4,
+              }),
+            }}>
+              <div style={{
+                width: "100%", height: "100%",
+                background: dir === "row"
+                  ? "linear-gradient(90deg, #E8453C44, #E8453C)"
+                  : "linear-gradient(180deg, #E8453C44, #E8453C)",
+                borderRadius: 4,
+              }} />
+              <div style={{
+                position: "absolute",
+                ...(dir === "row" ? { right: -6, top: "50%", transform: "translateY(-50%)" }
+                  : { bottom: -6, left: "50%", transform: "translateX(-50%)" }),
+                width: 0, height: 0,
+                borderLeft: dir === "row" ? "8px solid #E8453C" : "6px solid transparent",
+                borderRight: dir === "row" ? "none" : "6px solid transparent",
+                borderTop: dir === "column" ? "8px solid #E8453C" : "6px solid transparent",
+                borderBottom: dir === "column" ? "none" : "6px solid transparent",
+                transition: "all 0.5s ease",
+              }} />
+            </div>
+
+            {/* Cross axis arrow */}
+            <div style={{
+              position: "absolute",
+              transition: "all 0.5s ease",
+              ...(dir === "row" ? {
+                left: "50%", top: 20, bottom: 20,
+                transform: "translateX(-50%)",
+                width: 4,
+              } : {
+                top: "50%", left: 20, right: 20,
+                transform: "translateY(-50%)",
+                height: 4,
+              }),
+            }}>
+              <div style={{
+                width: "100%", height: "100%",
+                background: dir === "row"
+                  ? "linear-gradient(180deg, #2D8CFF44, #2D8CFF)"
+                  : "linear-gradient(90deg, #2D8CFF44, #2D8CFF)",
+                borderRadius: 4,
+              }} />
+              <div style={{
+                position: "absolute",
+                ...(dir === "row" ? { bottom: -6, left: "50%", transform: "translateX(-50%)" }
+                  : { right: -6, top: "50%", transform: "translateY(-50%)" }),
+                width: 0, height: 0,
+                borderLeft: dir === "column" ? "8px solid #2D8CFF" : "6px solid transparent",
+                borderRight: dir === "column" ? "none" : "6px solid transparent",
+                borderTop: dir === "row" ? "8px solid #2D8CFF" : "6px solid transparent",
+                borderBottom: dir === "row" ? "none" : "6px solid transparent",
+                transition: "all 0.5s ease",
+              }} />
+            </div>
+
+            {/* Labels on diagram */}
+            <div style={{
+              position: "absolute", fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: 11,
+              color: "#E8453C", transition: "all 0.5s ease", whiteSpace: "nowrap",
+              ...(dir === "row" ? { bottom: 8, right: 10 } : { bottom: 10, left: "50%", transform: "translateX(-50%)" }),
+            }}>MAIN</div>
+            <div style={{
+              position: "absolute", fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: 11,
+              color: "#2D8CFF", transition: "all 0.5s ease", whiteSpace: "nowrap",
+              ...(dir === "row" ? { bottom: 10, left: "50%", transform: "translateX(-50%)" } : { bottom: 8, right: 10 }),
+            }}>CROSS</div>
+          </div>
+
+          {/* Step-by-step explanation */}
+          <div style={{
+            fontFamily: "'Nunito', sans-serif", fontSize: 14, lineHeight: 1.8, color: "#ccc",
+          }}>
+            {dir === "row" ? (<>
+              <p>✅ Je items gaan naar <strong>rechts</strong> → dus de <strong style={{ color: "#E8453C" }}>rode pijl</strong> (main axis) wijst naar rechts.</p>
+              <p>↕ De andere richting is dan <strong>verticaal</strong> → dat is de <strong style={{ color: "#2D8CFF" }}>blauwe pijl</strong> (cross axis).</p>
+            </>) : (<>
+              <p>✅ Je items gaan naar <strong>beneden</strong> ↓ dus de <strong style={{ color: "#E8453C" }}>rode pijl</strong> (main axis) wijst naar beneden.</p>
+              <p>↔ De andere richting is dan <strong>horizontaal</strong> → dat is de <strong style={{ color: "#2D8CFF" }}>blauwe pijl</strong> (cross axis).</p>
+            </>)}
+          </div>
+        </div>
+
+        <Callout color="#F4A623" emoji="🔄">
+          <span>
+            <strong>Wissel hierboven tussen row en column</strong> en kijk hoe de pijlen draaien. Dat is het hele geheim van flexbox: de assen draaien mee met je richting.
+          </span>
+        </Callout>
+
+        <p style={text}>
+          Nu komt de truc: CSS heeft twee properties om je items te positioneren, en elke werkt op <em>één</em> van die twee pijlen:
+        </p>
+
+        <div style={{
+          display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16,
+        }}>
+          <div style={{
+            background: "#E8453C15", border: "2px solid #E8453C44", borderRadius: 12, padding: 16, textAlign: "center",
+          }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: "#E8453C", fontWeight: 700, marginBottom: 6 }}>
+              justify-content
+            </div>
+            <div style={{ fontSize: 13, color: "#ccc", fontFamily: "'Nunito', sans-serif", lineHeight: 1.5 }}>
+              Schuift items langs de<br /><strong style={{ color: "#E8453C" }}>rode pijl</strong> (main axis)
+            </div>
+          </div>
+          <div style={{
+            background: "#2D8CFF15", border: "2px solid #2D8CFF44", borderRadius: 12, padding: 16, textAlign: "center",
+          }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: "#2D8CFF", fontWeight: 700, marginBottom: 6 }}>
+              align-items
+            </div>
+            <div style={{ fontSize: 13, color: "#ccc", fontFamily: "'Nunito', sans-serif", lineHeight: 1.5 }}>
+              Schuift items langs de<br /><strong style={{ color: "#2D8CFF" }}>blauwe pijl</strong> (cross axis)
+            </div>
+          </div>
+        </div>
+
+        <Callout color="#1DBF73" emoji="🎯">
+          <span>
+            <strong>Dus:</strong> als je in een <strong>row</strong> items verticaal wilt centreren, gebruik je <code>align-items: center</code> — want verticaal is de <strong style={{ color: "#2D8CFF" }}>blauwe pijl</strong>.<br />
+            Niet <code>justify-content</code>! Die schuift langs de <strong style={{ color: "#E8453C" }}>rode pijl</strong> (horizontaal bij row).
+          </span>
+        </Callout>
+
+        <div style={{ textAlign: "right", marginTop: 16 }}>
+          <NavBtn onClick={() => setStep(1)} primary>Volgende →</NavBtn>
+        </div>
+      </div>}
+
+      {/* STEP 2 */}
+      {step === 1 && <div>
+        <h2 style={heading}>justify-content: verdeel ruimte op de main axis</h2>
+        <p style={text}>
+          Met <code>justify-content</code> bepaal je hoe de <em>lege ruimte</em> op de main axis verdeeld wordt. Klik op de opties:
+        </p>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+          {["flex-start", "center", "flex-end", "space-between", "space-around", "space-evenly"].map(v =>
+            <Pill key={v} label={v} active={justify === v} onClick={() => setJustify(v)} />
+          )}
+        </div>
+        <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+          <Pill label="row →" active={dir === "row"} onClick={() => setDir("row")} color="#F4A623" />
+          <Pill label="column ↓" active={dir === "column"} onClick={() => setDir("column")} color="#F4A623" />
+        </div>
+        <DemoContainer direction={dir} justify={justify} align="flex-start" gap={10} items={3} grow={false} />
+        <Callout color="#E8453C" emoji="⚠️">
+          <span>
+            <strong>Opgelet!</strong> Bij <strong>row</strong> schuift justify-content de items <em>links/rechts</em>.
+            Bij <strong>column</strong> schuift het ze <em>boven/onder</em>.<br />
+            Wissel hierboven tussen row en column om het verschil te zien!
+          </span>
+        </Callout>
+        <CodePreview direction={dir} justify={justify} align="flex-start" grow={false} />
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
+          <NavBtn onClick={() => setStep(0)}>← Terug</NavBtn>
+          <NavBtn onClick={() => setStep(2)} primary>Volgende →</NavBtn>
+        </div>
+      </div>}
+
+      {/* STEP 3 */}
+      {step === 2 && <div>
+        <h2 style={heading}>align-items: uitlijnen op de cross axis</h2>
+        <p style={text}>
+          Met <code>align-items</code> bepaal je waar de items staan op de <em>andere</em> as (de cross axis).
+        </p>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+          {["stretch", "flex-start", "center", "flex-end"].map(v =>
+            <Pill key={v} label={v} active={align === v} onClick={() => setAlign(v)} color="#2D8CFF" />
+          )}
+        </div>
+        <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+          <Pill label="row →" active={dir === "row"} onClick={() => setDir("row")} color="#F4A623" />
+          <Pill label="column ↓" active={dir === "column"} onClick={() => setDir("column")} color="#F4A623" />
+        </div>
+        <DemoContainer direction={dir} justify="flex-start" align={align} gap={10} items={3} grow={false} />
+        <Callout color="#2D8CFF" emoji="💡">
+          <span>
+            <strong>stretch</strong> is de standaard! Daarom worden items vaak "vanzelf" even hoog (bij row) of even breed (bij column).
+            Probeer <strong>flex-start</strong> om te zien hoe groot ze eigenlijk zijn.
+          </span>
+        </Callout>
+        <Callout color="#1DBF73" emoji="🎯">
+          <span>
+            <strong>Hoe centreer je iets perfect?</strong><br />
+            <code>justify-content: center</code> + <code>align-items: center</code><br />
+            Dit werkt voor zowel row als column!
+          </span>
+        </Callout>
+        <CodePreview direction={dir} justify="flex-start" align={align} grow={false} />
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
+          <NavBtn onClick={() => setStep(1)}>← Terug</NavBtn>
+          <NavBtn onClick={() => setStep(3)} primary>Volgende →</NavBtn>
+        </div>
+      </div>}
+
+      {/* STEP 4 */}
+      {step === 3 && <div>
+        <h2 style={heading}>Probeer het zelf!</h2>
+        <p style={text}>Combineer alle opties. Let op hoe alles verandert als je van row naar column wisselt.</p>
+        <div style={{ background: "#151528", borderRadius: 14, padding: 18, marginBottom: 16 }}>
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 11, color: "#666", fontWeight: 700, marginBottom: 6, fontFamily: "'Nunito', sans-serif", letterSpacing: 1 }}>RICHTING</div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <Pill label="row →" active={dir === "row"} onClick={() => setDir("row")} color="#F4A623" />
+              <Pill label="column ↓" active={dir === "column"} onClick={() => setDir("column")} color="#F4A623" />
+            </div>
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 11, color: "#E8453C", fontWeight: 700, marginBottom: 6, fontFamily: "'Nunito', sans-serif", letterSpacing: 1 }}>JUSTIFY-CONTENT (main axis)</div>
+            <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+              {["flex-start", "center", "flex-end", "space-between", "space-around", "space-evenly"].map(v =>
+                <Pill key={v} label={v} active={justify === v} onClick={() => setJustify(v)} />
+              )}
+            </div>
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 11, color: "#2D8CFF", fontWeight: 700, marginBottom: 6, fontFamily: "'Nunito', sans-serif", letterSpacing: 1 }}>ALIGN-ITEMS (cross axis)</div>
+            <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+              {["stretch", "flex-start", "center", "flex-end"].map(v =>
+                <Pill key={v} label={v} active={align === v} onClick={() => setAlign(v)} color="#2D8CFF" />
+              )}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: "#1DBF73", fontWeight: 700, marginBottom: 6, fontFamily: "'Nunito', sans-serif", letterSpacing: 1 }}>FLEX-GROW</div>
+            <div style={{ display: "flex", gap: 5 }}>
+              <Pill label="uit (0)" active={!grow} onClick={() => setGrow(false)} color="#1DBF73" />
+              <Pill label="aan (1)" active={grow} onClick={() => setGrow(true)} color="#1DBF73" />
+            </div>
+          </div>
+        </div>
+        <DemoContainer direction={dir} justify={justify} align={align} gap={10} items={3} grow={grow} />
+        <CodePreview direction={dir} justify={justify} align={align} grow={grow} />
+        {grow && <Callout color="#F4A623" emoji="⚠️">
+          <span><strong>Merk op:</strong> als flex-grow aan staat, nemen items alle ruimte in. Dan doet justify-content niks meer — er is geen lege ruimte meer om te verdelen!</span>
+        </Callout>}
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
+          <NavBtn onClick={() => setStep(2)}>← Terug</NavBtn>
+          <NavBtn onClick={() => setStep(4)} primary>Naar de quiz →</NavBtn>
+        </div>
+      </div>}
+
+      {/* STEP 5 */}
+      {step === 4 && <div>
+        <h2 style={heading}>Test jezelf! 🧠</h2>
+        <p style={text}>Klik op het juiste antwoord. Ga terug naar de playground als je twijfelt.</p>
+
+        <QuizQuestion
+          question="Je hebt flex-direction: row. Je wilt items verticaal centreren. Welke property gebruik je?"
+          options={["justify-content: center", "align-items: center", "text-align: center", "vertical-align: center"]}
+          correctIndex={1}
+          explanation="Bij row is de cross axis verticaal. align-items werkt op de cross axis, dus dat is de juiste keuze!"
+        />
+        <QuizQuestion
+          question="Je hebt flex-direction: column en justify-content: space-between. Wat gebeurt er?"
+          options={[
+            "Items worden links en rechts uitgelijnd",
+            "Items worden boven en onder verspreid met ruimte ertussen",
+            "Items worden horizontaal gecentreerd",
+            "Er verandert niks",
+          ]}
+          correctIndex={1}
+          explanation="Bij column is de main axis verticaal (↓). justify-content werkt op de main axis, dus het verdeelt de ruimte verticaal: eerste item bovenaan, laatste onderaan."
+        />
+        <QuizQuestion
+          question="Je items zijn allemaal even hoog terwijl je dat niet hebt ingesteld. Waarom?"
+          options={["Dat is een browser-bug", "flex-grow staat aan", "align-items staat standaard op stretch", "justify-content: center doet dat"]}
+          correctIndex={2}
+          explanation="align-items heeft als standaardwaarde 'stretch'. Daardoor rekken items uit om de cross axis te vullen. Bij row betekent dat: even hoog worden."
+        />
+        <QuizQuestion
+          question="flex-grow: 1 staat op alle items, maar justify-content: space-between doet niks. Waarom?"
+          options={[
+            "space-between werkt niet met meer dan 2 items",
+            "Je moet ook flex-shrink: 0 zetten",
+            "De items vullen alle ruimte — er is geen lege ruimte meer om te verdelen",
+            "justify-content werkt niet in een row",
+          ]}
+          correctIndex={2}
+          explanation="justify-content verdeelt lege ruimte. Als flex-grow aanstaat, groeien de items om alle ruimte te vullen. Geen lege ruimte = niks te verdelen!"
+        />
+        <QuizQuestion
+          question="Hoe centreer je één div perfect in het midden van de pagina?"
+          options={[
+            "text-align: center + vertical-align: middle",
+            "display: flex + justify-content: center + align-items: center",
+            "margin: 0 auto",
+            "position: absolute + top: 50% + left: 50%",
+          ]}
+          correctIndex={1}
+          explanation="display: flex met justify-content: center (main axis) en align-items: center (cross axis) centreert in beide richtingen. Dit werkt voor zowel row als column!"
+        />
+
+        <div style={{
+          background: "#1DBF7311", borderRadius: 14, padding: 20, marginTop: 20, textAlign: "center",
+        }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>🎉</div>
+          <p style={{ fontFamily: "'Nunito', sans-serif", fontSize: 16, fontWeight: 700, color: "#1DBF73", marginBottom: 8 }}>Samenvatting</p>
+          <div style={{
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: "#aaa", lineHeight: 2,
+            textAlign: "left", display: "inline-block",
+          }}>
+            <span style={{ color: "#E8453C" }}>justify-content</span> → main axis → richting van items<br />
+            <span style={{ color: "#2D8CFF" }}>align-items</span> → cross axis → de andere richting<br />
+            <span style={{ color: "#F4A623" }}>row</span>: main = → / cross = ↓<br />
+            <span style={{ color: "#F4A623" }}>column</span>: main = ↓ / cross = →<br />
+            <span style={{ color: "#1DBF73" }}>centreren</span> = justify: center + align: center
+          </div>
+        </div>
+
+        <div style={{ textAlign: "left", marginTop: 16 }}>
+          <NavBtn onClick={() => setStep(3)}>← Terug naar playground</NavBtn>
+        </div>
+      </div>}
+
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
